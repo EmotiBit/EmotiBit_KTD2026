@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "KTD2026.h"
 
-KTD2026 ledDriver;
+KTD2026 ledDriver(KTD2026_I2C_ADDRESS);
 
 void setup() {
   // put your setup code here, to run once:
@@ -17,7 +17,7 @@ void setup() {
     Serial.println("Sensor initialization failed.");
     while(1);
   }
-  ledDriver.setEnabled();
+  ledDriver.setEnable();
 }
 
 void loop() {
