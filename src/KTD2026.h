@@ -4,112 +4,123 @@
 
 
 // Define the I²C address for the KTD2026
-#define KTD2026_I2C_ADDRESS 0x30  // Update according to the datasheet
+#define KTD2026_I2C_ADDRESS 0x30  //!< I2C address for KTD2026 
+#define KTD2026B_I2C_ADDRESS 0x31  //!< I2C address for KTD2026B
 
 // Register Addresses (from the KTD2026 datasheet)
+#define KTD2026_REGISTER_BANK_SIZE 9  //<! KTD2026 register bank size
 #define KTD2026_REG_ENABLE 0x00
 #define KTD2026_REG_CHANNEL_CONTROL 0x04
+#define KTD2026_REG_CHANNEL1_IOUT 0x06
+#define KTD2026_REG_CHANNEL2_IOUT 0x07
+#define KTD2026_REG_CHANNEL3_IOUT 0x08
 
-#define KTD2026_MASK_CH_OFF 0x00
-#define KTD2026_MASK_CH_ON 0x01
-#define KTD2026_CHANNEL_CTRL_1_ON 0x01
-#define KTD2026_CHANNEL_CTRL_2_ON 0x04
-#define KTD2026_CHANNEL_CTRL_3_ON 0x10
-
+#define KTD2026_CH_SET_OFF_MASK 0x03 // 0b00000011
+#define KTD2026_CH_SET_ON_MASK 0x01  // 0b00000001
 
 // Driver class for KTD2026
 class KTD2026 {
 private:
     uint8_t _address;
     TwoWire* _i2c;
-    uint32_t _speed;
-    uint8_t _controlRegister = 0x00; 
+    uint8_t _controlRegister = 0x00;
+    uint8_t _registerBank[KTD2026_REGISTER_BANK_SIZE];
+    enum struct RegisterIndex : uint8_t{
+        ENABLE_RST = 0,
+        FLASH_PERIOD,
+        FLASH_ON_TIME1,
+        FLASH_ON_TIME2,
+        CHANNEL_CONTROL,
+        RAMP_RATE,
+        LED1_IOUT,
+        LED2_IOUT,
+        LED3_IOUT,
+        length
+    };
+
 
 public:
-    // Constructor
-    KTD2026(uint8_t i2cAddress = KTD2026_I2C_ADDRESS, TwoWire* i2c = &Wire, uint32_t speed = 400000)
+    enum struct Channel{
+        CH1 = 0,
+        CH2,
+        CH3,
+        length
+    };
+
+    enum struct LedMode{
+        ALWAYS_OFF = 0,
+        ALWAYS_ON,
+        PWM1,
+        PWM2,
+        length
+    };
+
+    /*!
+        @brief Constructor
+        @param i2cAddress IC I2C address. Defaults to KTD2026
+        @param i2c TwoWire instance of I2C. Defaults to Wire
+    */
+    KTD2026(uint8_t i2cAddress = KTD2026_I2C_ADDRESS, TwoWire* i2c = &Wire)
         : _address(i2cAddress)
-        , _i2c(i2c)
-        , _speed(speed) {}
+        , _i2c(i2c) {}
 
-    // Initialize the I²C interface
-    bool begin() {
-        //_i2c->begin(); // interface is initialized before being passed to this class
-        _i2c->beginTransmission(_address);
-        if (_i2c->endTransmission())
-            return false;
+    /*!
+        @brief Pings IC to confirm presence. Fails, if IC not detected
+        @return True if successful, else false
+    */
+    bool begin();
 
-        return true;
-        // ToDo: setup current level
-        // ToDO: maybe setup PWM
-    }
+    /*!
+        @brief Enable the controller
+        @return I2C error code
+    */
+    uint8_t setEnable();
 
-    // Enable or disable the KTD2026
-    void setEnabled() {
-        //writeRegister(KTD2026_REG_ENABLE, enable ? 0x01 : 0x00);
-        writeRegister(KTD2026_REG_ENABLE, 0x00);
+    /*!
+        @brief Write a value to register
+        @param reg Register to write
+        @param value Value to write
+        @return I2C error code
+    */
+    uint8_t writeRegister(uint8_t reg, uint8_t value);
 
-    }
+    /*!
+        @brief Read 1 byte from a register. Currently Not implemented due to IC's non-standard read protocol.
+        @param reg Register to read
+        @return Register value
+    */
+    uint8_t readRegister(uint8_t reg);
 
-    // Write to a KTD2026 register
-    bool writeRegister(uint8_t reg, uint8_t value) {
-        _i2c->beginTransmission(_address);
-        _i2c->write(reg);       // Register address
-        _i2c->write(value);     // Value to set
-        return (_i2c->endTransmission());
-    }
+    /*!
+        @brief Set channel current. Value maps 0.125mA to 24mA in 192 steps.
+        @param channel Channel to set the current for
+        @param value current value
+        @return I2C error
+    */
+    uint8_t setChannelCurrent(Channel channel, uint8_t value);
 
-    uint8_t readRegister(uint8_t reg)
-    {
-        _i2c->beginTransmission(_address);
-        _i2c->write(reg);       // Register address
-        _i2c->endTransmission();
-        _i2c->requestFrom(_address, 1); // request 1 byter of data
-        return (_i2c->read());
-    }
+    /*!
+        @brief Set the mode of indivual channels. Must call sendChannelMode separately to update IC
+        @param channel Led channel
+        @param mode Choose an option from the 4 Led modes
+        @return True is successful
+    */
+    bool updateChannelMode(Channel channel, LedMode mode);
 
-    bool setChannel1()
-    {
-        //uint8_t regVal = readRegister(KTD2026_REG_CHANNEL_CONTROL);
-        //Serial.print("Current register value: "); Serial.println(regVal, HEX);
-        _controlRegister = _controlRegister | 0b00000011; // mask
-        _controlRegister = _controlRegister & 0b11111101;
-        return(writeRegister(KTD2026_REG_CHANNEL_CONTROL, _controlRegister));
-    }
+    /*!
+        @brief Write updated chanel modes to the IC
+        @return I2C error
+    */
 
-    bool resetChannel1()
-    {
-        //uint8_t regVal = readRegister(KTD2026_REG_CHANNEL_CONTROL);
-        //Serial.print("Current register value: "); Serial.println(regVal, HEX);
-        _controlRegister = _controlRegister | 0b00000011; // mask
-        _controlRegister = _controlRegister & 0b11111100;
-        return(writeRegister(KTD2026_REG_CHANNEL_CONTROL, _controlRegister));
-    }
+    /*!
+        @brief Read the contents of the Channel Control register
+        @return Contents of the channel mode register
+    */
+    uint8_t getChannelControl();
     
-    bool setChannel2()
-    {
-        _controlRegister = _controlRegister | 0b00001100; // mask
-        _controlRegister = _controlRegister & 0b11110111;
-        return(writeRegister(KTD2026_REG_CHANNEL_CONTROL, _controlRegister));
-    }
-
-    bool resetChannel2()
-    {
-        _controlRegister = _controlRegister | 0b00001100; // mask
-        _controlRegister = _controlRegister & 0b11110011;
-        return(writeRegister(KTD2026_REG_CHANNEL_CONTROL, _controlRegister));
-    }
-    bool setChannel3()
-    {
-        _controlRegister = _controlRegister | 0b00110000; // mask
-        _controlRegister = _controlRegister & 0b11011111;
-        return(writeRegister(KTD2026_REG_CHANNEL_CONTROL, _controlRegister));
-    }
-
-    bool resetChannel3()
-    {
-        _controlRegister = _controlRegister | 0b00110000; // mask
-        _controlRegister = _controlRegister & 0b11001111;
-        return(writeRegister(KTD2026_REG_CHANNEL_CONTROL, _controlRegister));
-    }
+    /*!
+        @brief Write the Channel control register to the IC
+        @return I2C error code
+    */
+    uint8_t sendChannelControl();
 };
