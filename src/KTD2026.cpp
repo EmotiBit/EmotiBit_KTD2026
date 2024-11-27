@@ -65,7 +65,6 @@ bool KTD2026::updateChannelMode(Channel channel, LedMode mode)
     {
         shiftCount = 4;  // valid bits for channel 1 are 0b00YY0000
     }
-
     uint8_t mask;
     uint8_t& reg = _registerBank[(uint8_t)RegisterIndex::CHANNEL_CONTROL];
     if (mode == LedMode::ALWAYS_OFF)

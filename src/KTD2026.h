@@ -24,7 +24,7 @@ private:
     uint8_t _address;
     TwoWire* _i2c;
     uint8_t _controlRegister = 0x00;
-    uint8_t _registerBank[KTD2026_REGISTER_BANK_SIZE];
+    uint8_t _registerBank[KTD2026_REGISTER_BANK_SIZE] = {0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x4F, 0x4F, 0x4F}; // POR values from the datasheet
     enum struct RegisterIndex : uint8_t{
         ENABLE_RST = 0,
         FLASH_PERIOD,
