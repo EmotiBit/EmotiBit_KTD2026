@@ -1,0 +1,13 @@
+# VS code
+**/.vscode/*
+
+# tests
+tests/**/lib/*
+tests/**/include/*
+tests/**/test/*
+tests/**/.gitignore
+
+# doxygen
+Doxyfile
+html/**
+latex/**

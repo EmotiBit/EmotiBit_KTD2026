@@ -21,18 +21,16 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  ledDriver.setChannel1();
-  delay(1000);
-  ledDriver.setChannel2();
-  delay(1000);
-  ledDriver.setChannel3();
-  delay(1000);
-  ledDriver.resetChannel1();
-  delay(1000);
-  ledDriver.resetChannel2();
-  delay(1000);
-  ledDriver.resetChannel3();
-  delay(1000);
+  for(int i=0; i<(int)KTD2026::Channel::length; i++)
+  {
+    ledDriver.updateChannelMode((KTD2026::Channel)i, KTD2026::LedMode::ALWAYS_ON);
+    ledDriver.sendChannelControl();
+    delay(500);
+  }
+  for(int i=0; i<(int)KTD2026::Channel::length; i++)
+  {
+    ledDriver.updateChannelMode((KTD2026::Channel)i, KTD2026::LedMode::ALWAYS_OFF);
+    ledDriver.sendChannelControl();
+    delay(500);
+  }
 }
-

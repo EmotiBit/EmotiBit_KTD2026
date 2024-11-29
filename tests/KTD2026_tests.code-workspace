@@ -1,0 +1,29 @@
+{
+	"folders": [
+		{
+			"path": "../src"
+		},
+		{
+			"name": "readRegister",
+			"path": "D:/Documents/Arduino/libraries/EmotiBit_KTD2026/tests/readRegister"
+		},
+		{
+			"name": "test_LedBrightness",
+			"path": "test_LedBrightness"
+		},
+		{
+			"name": "test_udpateChannelMode",
+			"path": "test_udpateChannelMode"
+		},
+		{
+			"name": "test_ledToggle",
+			"path": "test_ledToggle"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.tcc": "cpp",
+			"ostream": "cpp"
+		}
+	}
+}
